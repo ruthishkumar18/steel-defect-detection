@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Steel Defect Detector</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: #1c1f26;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .images-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 25px;
+      justify-content: center;
+    }
+    .image-box {
+      background: #2e323f;
+      padding: 15px;
+      border-radius: 10px;
+      width: 280px;
+      text-align: center;
+    }
+    .image-box img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .defect {
+      display: inline-block;
+      background-color: #ffc107;
+      color: #000;
+      border-radius: 8px;
+      padding: 4px 10px;
+      margin: 4px 2px;
+      font-size: 0.9rem;
+    }
+    .error {
+      color: #f33;
+      font-size: 0.9rem;
+    }
+    .download-btn {
+      margin-top: 10px;
+      display: inline-block;
+      background: #28a745;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 5px;
+      text-decoration: none;
+    }
+    #loader {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+    #loader img {
+      width: 80px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loader">
+  <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading...">
+</div>
+
+<div class="container">
+  <h1>Steel Defect Detection</h1>
+  <form method="post" action="/predict" enctype="multipart/form-data">
+    <label class="form-label">Upload Image(s)</label>
+    <input type="file" name="images" class="form-control" multiple required>
+
+    <label for="threshold" class="form-label mt-3">Confidence Threshold: <span id="thresholdVal">0.5</span></label>
+    <input type="range" name="threshold" id="threshold" min="0" max="1" step="0.01" value="0.5" class="form-range">
+
+    <button type="submit" class="btn btn-primary mt-3">Detect Defects</button>
+  </form>
+
+  {% if results %}
+  <div class="images-container mt-5">
+    {% for result in results %}
+    <div class="image-box">
+      <h5>Original</h5>
+      <img src="{{ url_for('static', filename='uploads/' + result.original) }}">
+
+      {% if result.output %}
+      <h5 class="mt-3">Defected</h5>
+      <img src="{{ url_for('static', filename='outputs/' + result.output) }}">
+      <a class="download-btn" href="{{ url_for('static', filename='outputs/' + result.output) }}" download>Download</a>
+      {% else %}
+      <p class="error mt-3">{{ result.error }}</p>
+      {% endif %}
+
+      {% if result.defects %}
+      <h6 class="mt-2">Defects</h6>
+      <div>
+        {% for d in result.defects %}
+        <span class="defect">{{ d.label }} – {{ d.confidence }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<script>
+  const thresholdInput = document.getElementById("threshold");
+  const thresholdVal = document.getElementById("thresholdVal");
+  thresholdInput.addEventListener("input", () => {
+    thresholdVal.textContent = thresholdInput.value;
+  });
+
+  const form = document.querySelector("form");
+  form.addEventListener("submit", () => {
+    document.getElementById("loader").style.display = "flex";
+  });
+</script>
+
+</body>
+</html>
